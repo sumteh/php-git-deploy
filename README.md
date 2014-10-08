@@ -1,4 +1,3 @@
-PHP Git deploy
-==============
+# PHP Git deploy
 
-Automatically deploy the code from Git to a Server using PHP.
+Автоматическое развертывание кода из Git на сервер с помощью PHP.
