@@ -10,7 +10,7 @@ define('GIT_SECRET', 'SUPER_SECRET_PASSWORD'); //Секретный пароль
 define('GIT_BRANCH', 'master'); //Ветка, из которой будут забираться обновления
 ?>
 ```
- * Настройте репозиторий на GitHub для вызова этого скрипта после обновления в нем кода.
+ * Настройте репозиторий на GitHub для вызова этого скрипта после обновления кода
 
 ## Настройка GitHub 
  * Перейдите в https://github.com/USER/REPOSITORY/settings/hooks
