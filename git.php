@@ -1,9 +1,7 @@
 <?php
 $config_file = false;
-if (is_file(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'uses' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'git.php')){
-	$config_file = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'uses' . DIRECTORY_SEPARATOR . 'config' . DIRECTORY_SEPARATOR . 'git.php';
-} elseif (is_file(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'git-config.php')){
-	$config_file = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'git-config.php';
+if (is_file(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'config.php')){
+	$config_file = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'config.php';
 }
 
 if (!$config_file){
@@ -46,10 +44,10 @@ if ('' == $path){
 
 //echo 'Release: ' . $data->release->tag_name . "\n";
 
-$cmd = 'cd ' . dirname(__FILE__) . ' && git pull origin ' . GIT_BRANCH;
+$cmd = 'cd ' . dirname(__FILE__) . '../ && git pull origin ' . GIT_BRANCH;
 $tmp = array();
-$result = exec($cmd . ' 2>&1', $tmp, $return_code);
 echo '$ ' . $cmd . "\n";
+$result = exec($cmd, $tmp, $return_code);
 echo trim(implode("\n", $tmp)) . "\n";
 
 if (0 !== $return_code){
