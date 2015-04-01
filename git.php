@@ -14,7 +14,7 @@ $headers = getallheaders();
 $payload = file_get_contents('php://input');
 
 $data = false;
-if (!isset($headers['X-Hub-Signature']) || false === ($data = @json_decode($payload))){
+if (!isset($headers['X-Hub-Signature']) || null == ($data = json_decode($payload))){
 	return;
 }
 
