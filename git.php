@@ -5,10 +5,14 @@ if (is_file(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'config.php')){
 }
 
 if (!$config_file){
-	return;
+	die('Config file does not exist');
 }
 
 require($config_file);
+
+if (!defined('GIT_SECRET') || !defined('GIT_BRANCH')){
+	die('Config constants is not defined');
+}
 
 $headers = getallheaders();
 $payload = file_get_contents('php://input');
@@ -24,7 +28,7 @@ $payloadHash = hash_hmac($algoritm, $payload, GIT_SECRET);
 
 if ($hash !== $payloadHash){
 	//header('HTTP/1.1 403 Forbidden', true, 403);
-    die('Access denied!');
+	die('Access denied!');
 }
 
 if (!isset($data->action) || 'published' !== $data->action){
