@@ -84,7 +84,7 @@ if (0 !== $return_code){
 
 if (isset($CONFIG['chmod']) && is_array($CONFIG['chmod'])){
 	foreach ($CONFIG['chmod'] as $file => $mod){
-		$cmd = 'chmod ' . $file . ' ' . $mod;
+		$cmd = 'chmod ' . $mod . ' ' . $file;
 		$tmp = array();
 		echo '$ ' . $cmd . "\n";
 		$result = exec($cmd, $tmp, $return_code);
