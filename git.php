@@ -57,25 +57,25 @@ echo trim(implode("\n", $tmp)) . "\n";
 if (0 !== $return_code){
 	$h = 'conflict-' . strftime('%Y%m%d%H%M%S', time());
 
-	$cmd = 'git add .';
+	$cmd = 'cd ' . $CONFIG['document_root'] . ' && git add .';
 	$tmp = array();
 	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
 	echo trim(implode("\n", $tmp)) . "\n";
 
-	$cmd = 'git commit -a -m "' . $h . '"';
+	$cmd = 'cd ' . $CONFIG['document_root'] . ' && git commit -a -m "' . $h . '"';
 	$tmp = array();
 	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
 	echo trim(implode("\n", $tmp)) . "\n";
 
-	$cmd = 'git push origin ' . $CONFIG['branch'] . ':refs/heads/' . $h;
+	$cmd = 'cd ' . $CONFIG['document_root'] . ' && git push origin ' . $CONFIG['branch'] . ':refs/heads/' . $h;
 	$tmp = array();
 	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
 	echo trim(implode("\n", $tmp)) . "\n";
 
-	/*$cmd = 'git reset --hard HEAD && git pull origin ' . $CONFIG['branch'];
+	/*$cmd = 'cd ' . $CONFIG['document_root'] . ' && git reset --hard HEAD && git pull origin ' . $CONFIG['branch'];
 	$tmp = array();
 	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
