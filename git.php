@@ -8,10 +8,10 @@ if (!$config_file){
 	die('Config file does not exist');
 }
 
-require($config_file);
+$CONFIG = require($config_file);
 
-if (!defined('GIT_SECRET') || !defined('GIT_BRANCH')){
-	die('Config constants is not defined');
+if (!isset($CONFIG['secret']) || (!isset($CONFIG['branch']) || !$CONFIG['branch']) || (!isset($CONFIG['document_root']) || !$CONFIG['document_root'])){
+	die('Config is not filled');
 }
 
 $headers = getallheaders();
@@ -24,7 +24,7 @@ if (!isset($headers['X-Hub-Signature']) || null == ($data = json_decode($payload
 
 list($algoritm, $hash) = explode('=', $headers['X-Hub-Signature'], 2);
 
-$payloadHash = hash_hmac($algoritm, $payload, GIT_SECRET);
+$payloadHash = hash_hmac($algoritm, $payload, $CONFIG['secret']);
 
 if ($hash !== $payloadHash){
 	//header('HTTP/1.1 403 Forbidden', true, 403);
@@ -34,7 +34,7 @@ if ($hash !== $payloadHash){
 if (!isset($data->action) || 'published' !== $data->action){
 	die('Action «' . $data->action . '» is not allowed');
 }
-if (!isset($data->release->target_commitish) || GIT_BRANCH !== $data->release->target_commitish){
+if (!isset($data->release->target_commitish) || $CONFIG['branch'] !== $data->release->target_commitish){
 	die('target_commitish «' . $data->release->target_commitish . '» is bad');
 }
 
@@ -48,7 +48,7 @@ if ('' == $path){
 
 //echo 'Release: ' . $data->release->tag_name . "\n";
 
-$cmd = 'cd ' . dirname(__FILE__) . '../ && git pull origin ' . GIT_BRANCH;
+$cmd = 'cd ' . $CONFIG['document_root'] . ' && git pull origin ' . $CONFIG['branch'];
 $tmp = array();
 echo '$ ' . $cmd . "\n";
 $result = exec($cmd, $tmp, $return_code);
@@ -69,17 +69,27 @@ if (0 !== $return_code){
 	echo '$ ' . $cmd . "\n";
 	echo trim(implode("\n", $tmp)) . "\n";
 
-	$cmd = 'git push origin ' . GIT_BRANCH . ':refs/heads/' . $h;
+	$cmd = 'git push origin ' . $CONFIG['branch'] . ':refs/heads/' . $h;
 	$tmp = array();
 	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
 	echo trim(implode("\n", $tmp)) . "\n";
 
-	/*$cmd = 'git reset --hard HEAD && git pull origin ' . GIT_BRANCH;
+	/*$cmd = 'git reset --hard HEAD && git pull origin ' . $CONFIG['branch'];
 	$tmp = array();
 	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
 	echo trim(implode("\n", $tmp)) . "\n";*/
+}
+
+if (isset($CONFIG['chmod']) && is_array($CONFIG['chmod'])){
+	foreach ($CONFIG['chmod'] as $file => $mod){
+		$cmd = 'chmod ' . $file . ' ' . $mod;
+		$tmp = array();
+		echo '$ ' . $cmd . "\n";
+		$result = exec($cmd, $tmp, $return_code);
+		echo trim(implode("\n", $tmp)) . "\n";
+	}
 }
 
 echo "Done.\n";
