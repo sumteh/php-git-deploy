@@ -55,6 +55,8 @@ $result = exec($cmd, $tmp, $return_code);
 echo trim(implode("\n", $tmp)) . "\n";
 
 if (0 !== $return_code){
+	date_default_timezone_set('Asia/Yekaterinburg');
+
 	$h = 'conflict-' . strftime('%Y%m%d%H%M%S', time());
 
 	$cmd = 'cd ' . $CONFIG['document_root'] . ' && git add .';
