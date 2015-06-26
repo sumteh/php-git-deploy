@@ -54,7 +54,13 @@ echo '$ ' . $cmd . "\n";
 $result = exec($cmd, $tmp, $return_code);
 echo trim(implode("\n", $tmp)) . "\n";
 
-if (0 !== $return_code){
+if (0 === $return_code){
+	$cmd = 'cd ' . $CONFIG['document_root'] . ' && git submodule init && git submodule update';
+	$tmp = array();
+	echo '$ ' . $cmd . "\n";
+	$result = exec($cmd, $tmp, $return_code);
+	echo trim(implode("\n", $tmp)) . "\n";
+} else {
 	date_default_timezone_set('Asia/Yekaterinburg');
 
 	$h = 'conflict-' . strftime('%Y%m%d%H%M%S', time());
