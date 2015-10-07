@@ -55,7 +55,7 @@ $result = exec($cmd, $tmp, $return_code);
 echo trim(implode("\n", $tmp)) . "\n";
 
 if (0 === $return_code){
-	$cmd = 'cd ' . $CONFIG['document_root'] . ' && git submodule init && git submodule update';
+	$cmd = 'cd ' . $CONFIG['document_root'] . ' && git submodule update --init --recursive';
 	$tmp = array();
 	echo '$ ' . $cmd . "\n";
 	$result = exec($cmd, $tmp, $return_code);
