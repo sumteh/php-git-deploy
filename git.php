@@ -5,14 +5,19 @@ if (is_file(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'config.php')){
 }
 
 if (!$config_file){
-	die('Config file does not exist');
+	throw new \Exception('Config file does not exist');
 }
 
 $CONFIG = require($config_file);
 
 if (!isset($CONFIG['secret']) || (!isset($CONFIG['branch']) || !$CONFIG['branch']) || (!isset($CONFIG['document_root']) || !$CONFIG['document_root'])){
-	die('Config is not filled');
+	throw new \Exception('Config is not filled');
 }
+
+$CONFIG['document_root'] = rtrim($CONFIG['document_root'], DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+
+ignore_user_abort(true);
+set_time_limit(0);
 
 $headers = getallheaders();
 $payload = file_get_contents('php://input');
@@ -28,34 +33,52 @@ $payloadHash = hash_hmac($algoritm, $payload, $CONFIG['secret']);
 
 if ($hash !== $payloadHash){
 	//header('HTTP/1.1 403 Forbidden', true, 403);
-	die('Access denied!');
+	throw new \Exception('Access denied!');
 }
 
 if (!isset($data->action) || 'published' !== $data->action){
-	die('Action «' . $data->action . '» is not allowed');
+	throw new \Exception('Action «' . $data->action . '» is not allowed');
 }
 if (!isset($data->release->target_commitish) || $CONFIG['branch'] !== $data->release->target_commitish){
-	die('target_commitish «' . $data->release->target_commitish . '» is bad');
+	throw new \Exception('target_commitish «' . $data->release->target_commitish . '» is bad');
 }
 
-$path = trim(shell_exec('which git'));
-if ('' == $path){
-	die('«git» command is not available');
+$git_path = trim(shell_exec('which git'));
+if ('' == $git_path){
+	throw new \Exception('«git» command is not available');
 } else {
 	$version = explode("\n", shell_exec('git --version'));
-	echo $path . ': ' . $version[0] . "\n";
+	echo $git_path . ': ' . $version[0] . "\n";
+}
+
+if (!is_dir($CONFIG['document_root'] . '.git')){
+	throw new \Exception('Repository in «' . $CONFIG['document_root'] . '» does not exist');
 }
 
 //echo 'Release: ' . $data->release->tag_name . "\n";
 
-$cmd = 'cd ' . $CONFIG['document_root'] . ' && git pull origin ' . $CONFIG['branch'];
+$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" fetch --all', $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
+$tmp = array();
+echo '$ ' . $cmd . "\n";
+$result = exec($cmd, $tmp, $return_code);
+echo trim(implode("\n", $tmp)) . "\n";
+
+
+$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" diff master --exit-code --ignore-submodules', $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
 $tmp = array();
 echo '$ ' . $cmd . "\n";
 $result = exec($cmd, $tmp, $return_code);
 echo trim(implode("\n", $tmp)) . "\n";
 
 if (0 === $return_code){
-	$cmd = 'cd ' . $CONFIG['document_root'] . ' && git submodule init && git submodule update';
+	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" pull origin %s', $git_path, $CONFIG['document_root'], $CONFIG['document_root'], $CONFIG['branch']);
+	$tmp = array();
+	echo '$ ' . $cmd . "\n";
+	$result = exec($cmd, $tmp, $return_code);
+	echo trim(implode("\n", $tmp)) . "\n";
+
+
+	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" submodule update --init --recursive', $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
 	$tmp = array();
 	echo '$ ' . $cmd . "\n";
 	$result = exec($cmd, $tmp, $return_code);
@@ -65,25 +88,31 @@ if (0 === $return_code){
 
 	$h = 'conflict-' . strftime('%Y%m%d%H%M%S', time());
 
-	$cmd = 'cd ' . $CONFIG['document_root'] . ' && git add .';
+	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" add .', $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
 	$tmp = array();
 	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
 	echo trim(implode("\n", $tmp)) . "\n";
 
-	$cmd = 'cd ' . $CONFIG['document_root'] . ' && git commit -a -m "' . $h . '"';
+	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" commit -a -m "%s"', $git_path, $CONFIG['document_root'], $CONFIG['document_root'], $h);
 	$tmp = array();
 	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
 	echo trim(implode("\n", $tmp)) . "\n";
 
-	$cmd = 'cd ' . $CONFIG['document_root'] . ' && git push origin ' . $CONFIG['branch'] . ':refs/heads/' . $h;
+	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" push origin %s:refs/heads/%s', $git_path, $CONFIG['document_root'], $CONFIG['document_root'], $CONFIG['branch'], $h);
 	$tmp = array();
 	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
 	echo trim(implode("\n", $tmp)) . "\n";
 
-	/*$cmd = 'cd ' . $CONFIG['document_root'] . ' && git reset --hard HEAD && git pull origin ' . $CONFIG['branch'];
+	/*$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" reset --hard HEAD', $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
+	$tmp = array();
+	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
+	echo '$ ' . $cmd . "\n";
+	echo trim(implode("\n", $tmp)) . "\n";
+
+	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" pull origin ' . $CONFIG['branch'], $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
 	$tmp = array();
 	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
@@ -92,7 +121,7 @@ if (0 === $return_code){
 
 if (isset($CONFIG['chmod']) && is_array($CONFIG['chmod'])){
 	foreach ($CONFIG['chmod'] as $file => $mod){
-		$cmd = 'chmod ' . $mod . ' ' . $file;
+		$cmd = sprintf('chmod %s %s', $mod, $file);
 		$tmp = array();
 		echo '$ ' . $cmd . "\n";
 		$result = exec($cmd, $tmp, $return_code);
