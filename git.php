@@ -71,7 +71,7 @@ $result = exec($cmd, $tmp, $return_code);
 echo trim(implode("\n", $tmp)) . "\n";
 
 if (0 === $return_code){
-	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" pull origin %s', $git_path, $CONFIG['document_root'], $CONFIG['document_root'], $CONFIG['branch']);
+	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" pull --verbose --no-edit origin %s', $git_path, $CONFIG['document_root'], $CONFIG['document_root'], $CONFIG['branch']);
 	$tmp = array();
 	echo '$ ' . $cmd . "\n";
 	$result = exec($cmd, $tmp, $return_code);
