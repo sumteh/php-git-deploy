@@ -47,8 +47,11 @@ $git_path = trim(shell_exec('which git'));
 if ('' == $git_path){
 	throw new \Exception('«git» command is not available');
 } else {
-	$version = explode("\n", shell_exec('git --version'));
-	echo $git_path . ': ' . $version[0] . "\n";
+	$cmd = sprintf('%s --version', $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
+	$tmp = array();
+	echo '$ ' . $cmd . "\n";
+	$result = exec($cmd . " 2>&1", $tmp, $return_code);
+	echo trim(implode("\n", $tmp)) . "\n";
 }
 
 if (!is_dir($CONFIG['document_root'] . '.git')){
@@ -60,28 +63,28 @@ if (!is_dir($CONFIG['document_root'] . '.git')){
 $cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" fetch --all', $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
 $tmp = array();
 echo '$ ' . $cmd . "\n";
-$result = exec($cmd, $tmp, $return_code);
+$result = exec($cmd . " 2>&1", $tmp, $return_code);
 echo trim(implode("\n", $tmp)) . "\n";
 
 
 $cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" diff master --exit-code --ignore-submodules', $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
 $tmp = array();
 echo '$ ' . $cmd . "\n";
-$result = exec($cmd, $tmp, $return_code);
+$result = exec($cmd . " 2>&1", $tmp, $return_code);
 echo trim(implode("\n", $tmp)) . "\n";
 
 if (0 === $return_code){
 	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" pull --verbose --no-edit origin %s', $git_path, $CONFIG['document_root'], $CONFIG['document_root'], $CONFIG['branch']);
 	$tmp = array();
 	echo '$ ' . $cmd . "\n";
-	$result = exec($cmd, $tmp, $return_code);
+	$result = exec($cmd . " 2>&1", $tmp, $return_code);
 	echo trim(implode("\n", $tmp)) . "\n";
 
 
 	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" submodule update --init --recursive', $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
 	$tmp = array();
 	echo '$ ' . $cmd . "\n";
-	$result = exec($cmd, $tmp, $return_code);
+	$result = exec($cmd . " 2>&1", $tmp, $return_code);
 	echo trim(implode("\n", $tmp)) . "\n";
 } else {
 	date_default_timezone_set('Asia/Yekaterinburg');
@@ -90,31 +93,31 @@ if (0 === $return_code){
 
 	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" add .', $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
 	$tmp = array();
-	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
+	$result = exec($cmd . " 2>&1", $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
 	echo trim(implode("\n", $tmp)) . "\n";
 
 	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" commit -a -m "%s"', $git_path, $CONFIG['document_root'], $CONFIG['document_root'], $h);
 	$tmp = array();
-	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
+	$result = exec($cmd . " 2>&1", $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
 	echo trim(implode("\n", $tmp)) . "\n";
 
 	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" push origin %s:refs/heads/%s', $git_path, $CONFIG['document_root'], $CONFIG['document_root'], $CONFIG['branch'], $h);
 	$tmp = array();
-	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
+	$result = exec($cmd . " 2>&1", $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
 	echo trim(implode("\n", $tmp)) . "\n";
 
 	/*$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" reset --hard HEAD', $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
 	$tmp = array();
-	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
+	$result = exec($cmd . " 2>&1", $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
 	echo trim(implode("\n", $tmp)) . "\n";
 
 	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" pull origin ' . $CONFIG['branch'], $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
 	$tmp = array();
-	$result = exec($cmd . ' 2>&1', $tmp, $return_code);
+	$result = exec($cmd . " 2>&1", $tmp, $return_code);
 	echo '$ ' . $cmd . "\n";
 	echo trim(implode("\n", $tmp)) . "\n";*/
 }
@@ -124,7 +127,7 @@ if (isset($CONFIG['chmod']) && is_array($CONFIG['chmod'])){
 		$cmd = sprintf('chmod %s %s', $mod, $file);
 		$tmp = array();
 		echo '$ ' . $cmd . "\n";
-		$result = exec($cmd, $tmp, $return_code);
+		$result = exec($cmd . " 2>&1", $tmp, $return_code);
 		echo trim(implode("\n", $tmp)) . "\n";
 	}
 }
