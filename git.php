@@ -60,6 +60,20 @@ if (!is_dir($CONFIG['document_root'] . '.git')){
 
 //echo 'Release: ' . $data->release->tag_name . "\n";
 
+$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" config --get "user.name"', $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
+$tmp = array();
+echo '$ ' . $cmd . "\n";
+$result = exec($cmd . " 2>&1", $tmp, $return_code);
+if (0 === $return_code){
+	echo trim(implode("\n", $tmp)) . "\n";
+} else {
+	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" config user.name "%s"', $git_path, $CONFIG['document_root'], $CONFIG['document_root'], 'PHP Git deploy');
+	$tmp = array();
+	echo '$ ' . $cmd . "\n";
+	$result = exec($cmd . " 2>&1", $tmp, $return_code);
+	echo trim(implode("\n", $tmp)) . "\n";
+}
+
 $cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" fetch --all', $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
 $tmp = array();
 echo '$ ' . $cmd . "\n";
@@ -81,7 +95,7 @@ if (0 === $return_code){
 	echo trim(implode("\n", $tmp)) . "\n";
 
 
-	$cmd = sprintf('%s --git-dir="%s.git" --work-tree="%s" submodule update --init --recursive', $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
+	$cmd = sprintf('cd %s && %s --git-dir="%s.git" --work-tree="%s" submodule update --init --recursive', $CONFIG['document_root'], $git_path, $CONFIG['document_root'], $CONFIG['document_root']);
 	$tmp = array();
 	echo '$ ' . $cmd . "\n";
 	$result = exec($cmd . " 2>&1", $tmp, $return_code);
