@@ -41,10 +41,14 @@ if ($hash !== $payloadHash){
 	throw new \Exception('Access denied!');
 }
 
-if (!isset($data->action) || 'published' !== $data->action){
+if (!isset($data->action)){
+	throw new \Exception('Action is not isset');
+} elseif ('published' !== $data->action){
 	throw new \Exception('Action «' . $data->action . '» is not allowed');
 }
-if (!isset($data->release->target_commitish) || $CONFIG['branch'] !== $data->release->target_commitish){
+if (!isset($data->release->target_commitish)){
+	throw new \Exception('target_commitish not is set');
+} elseif ($CONFIG['branch'] !== $data->release->target_commitish){
 	throw new \Exception('target_commitish «' . $data->release->target_commitish . '» is bad');
 }
 
