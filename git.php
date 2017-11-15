@@ -1,4 +1,9 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', true);
+ini_set('display_startup_errors', true);
+ini_set('log_errors', true);
+
 $config_file = false;
 if (is_file(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'config.php')){
 	$config_file = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'config.php';
