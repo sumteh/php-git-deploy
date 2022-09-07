@@ -15,7 +15,7 @@ if (!$config_file){
 
 $CONFIG = require($config_file);
 
-if (!isset($CONFIG['secret']) || (!isset($CONFIG['branch']) || !$CONFIG['branch']) || (!isset($CONFIG['document_root']) || !$CONFIG['document_root'])){
+if (!isset($CONFIG['secret']) || empty($CONFIG['branch']) || empty($CONFIG['document_root'])){
 	throw new \Exception('Config is not filled');
 }
 
@@ -30,6 +30,26 @@ $payload = file_get_contents('php://input');
 $data = false;
 if (!isset($headers['X-Hub-Signature']) || null == ($data = json_decode($payload))){
 	return;
+}
+
+if (!empty($CONFIG['actions'])){
+	$actionCorrect = false;
+	foreach ($CONFIG['actions'] as $action){
+		list($event, $action) = explode('.', $action);
+
+		if (
+			(isset($headers['X-Github-Event']) && $headers['X-Github-Event'] == $event)
+			&& (isset($data->action) && $data->action == $action)
+		){
+			$actionCorrect = true;
+			break;
+		}
+	}
+
+	if (!$actionCorrect){
+		throw new \Exception('Action is not correct!');
+		return;
+	}
 }
 
 list($algoritm, $hash) = explode('=', $headers['X-Hub-Signature'], 2);
