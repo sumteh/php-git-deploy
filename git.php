@@ -1,4 +1,9 @@
 <?php
+error_reporting(E_ALL);
+ini_set('display_errors', true);
+ini_set('display_startup_errors', true);
+ini_set('log_errors', true);
+
 $config_file = false;
 if (is_file(dirname(__FILE__) . DIRECTORY_SEPARATOR . 'config.php')){
 	$config_file = dirname(__FILE__) . DIRECTORY_SEPARATOR . 'config.php';
@@ -10,7 +15,7 @@ if (!$config_file){
 
 $CONFIG = require($config_file);
 
-if (!isset($CONFIG['secret']) || (!isset($CONFIG['branch']) || !$CONFIG['branch']) || (!isset($CONFIG['document_root']) || !$CONFIG['document_root'])){
+if (!isset($CONFIG['secret']) || empty($CONFIG['branch']) || empty($CONFIG['document_root'])){
 	throw new \Exception('Config is not filled');
 }
 
@@ -27,6 +32,26 @@ if (!isset($headers['X-Hub-Signature']) || null == ($data = json_decode($payload
 	return;
 }
 
+if (!empty($CONFIG['actions'])){
+	$actionCorrect = false;
+	foreach ($CONFIG['actions'] as $action){
+		list($event, $action) = explode('.', $action);
+
+		if (
+			(isset($headers['X-Github-Event']) && $headers['X-Github-Event'] == $event)
+			&& (isset($data->action) && $data->action == $action)
+		){
+			$actionCorrect = true;
+			break;
+		}
+	}
+
+	if (!$actionCorrect){
+		throw new \Exception('Action is not correct!');
+		return;
+	}
+}
+
 list($algoritm, $hash) = explode('=', $headers['X-Hub-Signature'], 2);
 
 $payloadHash = hash_hmac($algoritm, $payload, $CONFIG['secret']);
@@ -36,10 +61,14 @@ if ($hash !== $payloadHash){
 	throw new \Exception('Access denied!');
 }
 
-if (!isset($data->action) || 'published' !== $data->action){
+if (!isset($data->action)){
+	throw new \Exception('Action is not isset');
+} elseif ('published' !== $data->action){
 	throw new \Exception('Action «' . $data->action . '» is not allowed');
 }
-if (!isset($data->release->target_commitish) || $CONFIG['branch'] !== $data->release->target_commitish){
+if (!isset($data->release->target_commitish)){
+	throw new \Exception('target_commitish not is set');
+} elseif ($CONFIG['branch'] !== $data->release->target_commitish){
 	throw new \Exception('target_commitish «' . $data->release->target_commitish . '» is bad');
 }
 
